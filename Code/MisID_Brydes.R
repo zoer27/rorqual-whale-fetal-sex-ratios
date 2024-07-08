@@ -1,7 +1,6 @@
 #MisID models for Bryde's whales
 #Separated out from others to improve convergence
 #WAIC and diagnostics were completed as described in Code/MisIDmodelsStan.R
-#Zoe Rand
 #Last updated 7/5/24
 
 library(tidyverse)

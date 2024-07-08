@@ -1,5 +1,4 @@
 #Bayesian GLMM Mother Length Fetal Sex
-#Zoe Rand
 #Last updated: 7/5/24
 
 

@@ -3,7 +3,6 @@
 #separately because a few constraints were placed on those paramters to 
 #improve convergence. See additional code (MisID_Brydes.R, MisID_CMM.R) and paper
 #for more details.
-#Zoe Rand
 #last updated 7/5/24
 
 
