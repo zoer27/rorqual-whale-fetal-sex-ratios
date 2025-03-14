@@ -1,9 +1,12 @@
 #Bayesian GLMM Mother Length Fetal Sex
-#Last updated: 7/5/24
+#Last updated: 3/14/2025
 
 
 # Libraries ---------------------------------------------------------------
 library(tidyverse)
+#use brms version 2.21.0
+#brmsurl<-"http://cran.r-project.org/src/contrib/Archive/brms/brms_2.21.0.tar.gz"
+#install.packages(brmsurl, type = "source")
 library(brms)
 library(bayesplot)
 library(patchwork)
@@ -102,12 +105,11 @@ ggplot(Binned3Iinches) + geom_point(aes(x = binned_center_sc, y = Total)) +
 Mod1_ALLRE<-brm(Nmale | trials(Total) ~ binned_center_sc + (1+binned_center_sc||SpName), #double bar means no correlation
                        data = Binned3Iinches, family = "beta_binomial", 
                        prior = c(prior(normal(0, 10), class = Intercept),
-                                 prior(normal(0, 10), class = b), 
+                                prior(normal(0, 10), class = b), 
                                  prior(exponential(1), class = sd)),
                        warmup = 5000, 
                        iter   = 6000, 
-                       chains = 4, control = list(adapt_delta = 0.95), 
-                      file = "Results/GLMM_Modelfit_44.rds")
+                       chains = 1, control = list(adapt_delta = 0.95))
 
 
 
@@ -353,6 +355,42 @@ linesplot
 #ggsave("Figures/predictions_species.png", linesplot, width = 7, height = 8, units = "in", dpi = 600)
 
 
+#population-level plot
+par_draws<-Mod1 %>% spread_draws(b_binned_center_sc, b_Intercept)
 
+Sp_lengths<-seq(-2, 2, by = 0.05)
+
+out<-mapply(function(x,y) plogis(x + y*Sp_lengths), par_draws$b_Intercept, par_draws$b_binned_center_sc)
+
+preds_quants<-apply(out, 1, mode_hdci) %>% bind_rows() %>% add_column(mat_length = Sp_lengths)
+
+lines_group<-ggplot(preds_quants) +
+  annotate("rect", xmin = -2, xmax = 2, ymin = 0.46, ymax = 0.54, fill = "gray", alpha = 0.5) +
+  geom_hline(aes(yintercept = 0.5), color = 'red')+
+  geom_line(aes(x = mat_length, y = y), alpha = 1, linewidth = 0.6, color = "black") + 
+  geom_ribbon(aes(x = mat_length, ymin = ymin, ymax = ymax), alpha = 0, linetype = "dashed", linewidth = 0.6, color = "black") + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0.46, 0.54)) + 
+  scale_x_continuous(expand = c(0, 0)) +
+  labs(x = "Maternal length (scaled)", y = "Fetal sex ratio") + 
+  theme_tufte(base_size = 12, base_family = "Arial") + 
+  theme(legend.position = "none", 
+        #text = element_text(family = "Arial", size = 12), 
+        strip.text = element_text(color = "black", size = 11, vjust = -1), 
+        panel.grid.major.y = element_blank(), 
+        panel.spacing = unit(0.5, "lines"), 
+        plot.title = element_text(hjust = 0.5)) + 
+  ggtitle("Group")
+
+lines_group
+
+lay<-"
+AAAA
+AAAA
+AAAA
+AAAA
+#BB#"
+
+lines_tog<-linesplot + lines_group + plot_layout(design = lay)
+lines_tog
 
 
